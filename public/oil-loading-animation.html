@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Oil Extraction Loading Animation</title>
+  <style>
+    :root { background: #fff; }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; width: 100%; height: 100%; overflow: hidden; background: #fff; }
+    .scene { position: relative; width: 100vw; height: 100vh; background: #fff; isolation: isolate; }
+    .pumpjack { position: absolute; left: 50%; bottom: 5vh; width: min(420px, 52vw); transform: translateX(-50%); animation: pump 1.15s ease-in-out 0.35s 3; transform-origin: 50% 90%; z-index: 3; }
+    .ground { position: absolute; left: 0; right: 0; bottom: 17vh; height: 4px; background: #252525; z-index: 2; }
+    .oil { position: absolute; left: -10%; bottom: -8%; width: 120%; height: 118%; background: #050505; border-radius: 48% 52% 0 0 / 4% 4% 0 0; transform: translateY(105%); animation: rise 2.8s cubic-bezier(.65,0,.2,1) 3.45s forwards; z-index: 5; }
+    .oil::before { content: ""; position: absolute; top: -18px; left: 0; width: 100%; height: 38px; background: #050505; border-radius: 50%; filter: blur(1px); }
+    @keyframes pump { 0%,100% { transform: translateX(-50%) rotate(0deg); } 50% { transform: translateX(-50%) rotate(-7deg); } }
+    @keyframes rise { 0% { transform: translateY(105%); } 100% { transform: translateY(0); } }
+    @media (prefers-reduced-motion: reduce) { .pumpjack { animation: none; } .oil { animation: none; transform: translateY(0); } }
+  </style>
+</head>
+<body>
+  <main class="scene" aria-label="Oil extraction loading animation">
+    <div class="ground"></div>
+    <svg class="pumpjack" viewBox="0 0 420 260" role="img" aria-label="Oil pumpjack">
+      <g fill="none" stroke="#202020" stroke-width="12" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M125 230 L160 105 L260 105 L295 230" />
+        <path d="M145 230 H275" />
+        <path d="M210 105 V35" />
+        <path d="M170 35 H250" />
+        <path d="M210 35 L210 12" />
+        <path d="M210 12 H280 V35" />
+        <path d="M160 105 L95 155" />
+        <path d="M260 105 L340 155" />
+        <path d="M95 155 H340" />
+        <path d="M210 105 V230" />
+        <path d="M340 155 V230" />
+      </g>
+      <g fill="#777">
+        <rect x="190" y="82" width="40" height="46" rx="7" />
+        <circle cx="210" cy="105" r="18" fill="#d6d6d6" stroke="#202020" stroke-width="8" />
+        <rect x="55" y="145" width="50" height="22" rx="6" />
+        <rect x="335" y="145" width="50" height="22" rx="6" />
+      </g>
+      <path d="M80 156 H350" stroke="#202020" stroke-width="18" stroke-linecap="round" />
+      <path d="M350 156 V212" stroke="#202020" stroke-width="9" stroke-linecap="round" />
+      <path d="M350 212 H370" stroke="#202020" stroke-width="9" stroke-linecap="round" />
+    </svg>
+    <div class="oil" aria-hidden="true"></div>
+  </main>
+</body>
+</html>
