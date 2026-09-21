@@ -8,44 +8,237 @@
     :root { background: #fff; }
     * { box-sizing: border-box; }
     html, body { margin: 0; width: 100%; height: 100%; overflow: hidden; background: #fff; }
-    .scene { position: relative; width: 100vw; height: 100vh; background: #fff; isolation: isolate; }
-    .pumpjack { position: absolute; left: 50%; bottom: 5vh; width: min(420px, 52vw); transform: translateX(-50%); animation: pump 1.15s ease-in-out 0.35s 3; transform-origin: 50% 90%; z-index: 3; }
-    .ground { position: absolute; left: 0; right: 0; bottom: 17vh; height: 4px; background: #252525; z-index: 2; }
-    .oil { position: absolute; left: -10%; bottom: -8%; width: 120%; height: 118%; background: #050505; border-radius: 48% 52% 0 0 / 4% 4% 0 0; transform: translateY(105%); animation: rise 2.8s cubic-bezier(.65,0,.2,1) 3.45s forwards; z-index: 5; }
-    .oil::before { content: ""; position: absolute; top: -18px; left: 0; width: 100%; height: 38px; background: #050505; border-radius: 50%; filter: blur(1px); }
-    @keyframes pump { 0%,100% { transform: translateX(-50%) rotate(0deg); } 50% { transform: translateX(-50%) rotate(-7deg); } }
-    @keyframes rise { 0% { transform: translateY(105%); } 100% { transform: translateY(0); } }
-    @media (prefers-reduced-motion: reduce) { .pumpjack { animation: none; } .oil { animation: none; transform: translateY(0); } }
+    body { font-family: system-ui, sans-serif; }
+
+    .scene {
+      position: relative;
+      width: 100vw;
+      height: 100vh;
+      overflow: hidden;
+      background: #fff;
+      isolation: isolate;
+    }
+
+    .ground {
+      position: absolute;
+      inset: auto 0 17vh;
+      height: 3px;
+      background: #202020;
+      z-index: 2;
+    }
+
+    .pumpjack {
+      position: absolute;
+      left: 50%;
+      bottom: 5vh;
+      width: min(650px, 76vw);
+      height: auto;
+      transform: translateX(-50%);
+      z-index: 3;
+    }
+
+    /* One coherent mechanical cycle: beam, horsehead and rod move together. */
+    .beam-motion {
+      transform-box: fill-box;
+      transform-origin: 50% 50%;
+      animation: beamRock 1.35s cubic-bezier(.45, 0, .55, 1) .35s 3 both;
+    }
+
+    .rod-motion {
+      animation: rodStroke 1.35s cubic-bezier(.45, 0, .55, 1) .35s 3 both;
+    }
+
+    .crank-motion {
+      transform-box: fill-box;
+      transform-origin: 50% 50%;
+      animation: crankRotate 1.35s linear .35s 3 both;
+    }
+
+    .pitman-motion {
+      transform-box: fill-box;
+      transform-origin: 50% 0%;
+      animation: pitmanMove 1.35s ease-in-out .35s 3 both;
+    }
+
+    @keyframes beamRock {
+      0%, 100% { transform: rotate(-6deg); }
+      50% { transform: rotate(6deg); }
+    }
+
+    @keyframes rodStroke {
+      0%, 100% { transform: translateY(20px); }
+      50% { transform: translateY(-20px); }
+    }
+
+    @keyframes crankRotate {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(1080deg); }
+    }
+
+    @keyframes pitmanMove {
+      0%, 100% { transform: rotate(-7deg); }
+      50% { transform: rotate(7deg); }
+    }
+
+    .oil {
+      position: absolute;
+      left: -8%;
+      bottom: -5%;
+      width: 116%;
+      height: 112%;
+      background: #050505;
+      border-radius: 50% 50% 0 0 / 24px 24px 0 0;
+      transform: translateY(105%);
+      z-index: 5;
+      animation: oilRise 3.4s cubic-bezier(.62, 0, .18, 1) 4.65s forwards;
+    }
+
+    .oil::before {
+      content: "";
+      position: absolute;
+      top: -22px;
+      left: 0;
+      width: 100%;
+      height: 44px;
+      background: #050505;
+      border-radius: 50%;
+    }
+
+    .oil::after {
+      content: "";
+      position: absolute;
+      top: -9px;
+      left: 0;
+      width: 100%;
+      height: 18px;
+      background: #171717;
+      border-radius: 50%;
+      opacity: .65;
+    }
+
+    @keyframes oilRise {
+      0% { transform: translateY(105%); }
+      70% { transform: translateY(8%); }
+      100% { transform: translateY(0); }
+    }
+
+    .scene.finished .oil { animation-play-state: paused; transform: translateY(0); }
+
+    @media (prefers-reduced-motion: reduce) {
+      .beam-motion, .rod-motion, .crank-motion, .pitman-motion {
+        animation: none;
+      }
+      .oil {
+        animation: none;
+        transform: translateY(0);
+      }
+    }
   </style>
 </head>
 <body>
-  <main class="scene" aria-label="Oil extraction loading animation">
-    <div class="ground"></div>
-    <svg class="pumpjack" viewBox="0 0 420 260" role="img" aria-label="Oil pumpjack">
-      <g fill="none" stroke="#202020" stroke-width="12" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M125 230 L160 105 L260 105 L295 230" />
-        <path d="M145 230 H275" />
-        <path d="M210 105 V35" />
-        <path d="M170 35 H250" />
-        <path d="M210 35 L210 12" />
-        <path d="M210 12 H280 V35" />
-        <path d="M160 105 L95 155" />
-        <path d="M260 105 L340 155" />
-        <path d="M95 155 H340" />
-        <path d="M210 105 V230" />
-        <path d="M340 155 V230" />
+  <main class="scene" id="scene" aria-label="Oil extraction loading animation">
+    <div class="ground" aria-hidden="true"></div>
+
+    <svg class="pumpjack" viewBox="0 0 650 360" role="img" aria-label="Industrial oil pumpjack">
+      <defs>
+        <linearGradient id="steel" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stop-color="#4b5563" />
+          <stop offset="1" stop-color="#171717" />
+        </linearGradient>
+      </defs>
+
+      <!-- Foundation -->
+      <g fill="#343434">
+        <rect x="110" y="324" width="430" height="13" rx="3" />
+        <rect x="132" y="314" width="92" height="10" rx="2" />
+        <rect x="420" y="314" width="92" height="10" rx="2" />
       </g>
-      <g fill="#777">
-        <rect x="190" y="82" width="40" height="46" rx="7" />
-        <circle cx="210" cy="105" r="18" fill="#d6d6d6" stroke="#202020" stroke-width="8" />
-        <rect x="55" y="145" width="50" height="22" rx="6" />
-        <rect x="335" y="145" width="50" height="22" rx="6" />
+
+      <!-- Sampson post / A-frame -->
+      <g fill="none" stroke="#252525" stroke-width="9" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M320 92 L254 314 M320 92 L386 314" />
+        <path d="M282 220 H358 M268 268 H372" stroke-width="6" />
+        <path d="M282 220 L358 268 M358 220 L282 268" stroke-width="5" />
       </g>
-      <path d="M80 156 H350" stroke="#202020" stroke-width="18" stroke-linecap="round" />
-      <path d="M350 156 V212" stroke="#202020" stroke-width="9" stroke-linecap="round" />
-      <path d="M350 212 H370" stroke="#202020" stroke-width="9" stroke-linecap="round" />
+
+      <!-- Wellhead and polished rod -->
+      <g>
+        <rect x="156" y="287" width="30" height="27" rx="3" fill="#343434" />
+        <rect x="149" y="279" width="44" height="9" rx="2" fill="#171717" />
+        <rect x="166" y="176" width="10" height="104" fill="#111111" />
+        <rect x="160" y="171" width="22" height="8" rx="2" fill="#4b5563" />
+      </g>
+
+      <!-- Walking beam with attached horsehead -->
+      <g class="beam-motion">
+        <rect x="140" y="82" width="390" height="22" rx="8" fill="url(#steel)" stroke="#111" stroke-width="3" />
+        <path d="M320 92 L320 72" stroke="#111" stroke-width="12" stroke-linecap="round" />
+        <circle cx="320" cy="92" r="15" fill="#c7c7c7" stroke="#171717" stroke-width="7" />
+
+        <!-- Authentic curved horsehead -->
+        <path d="M151 92 C122 106 105 143 105 190 C105 227 118 250 141 268 L160 247 C145 225 139 206 139 181 C139 146 150 126 171 112 Z"
+              fill="url(#steel)" stroke="#111" stroke-width="4" stroke-linejoin="round" />
+        <path d="M151 108 C132 129 124 151 124 184 C124 216 133 239 150 254"
+              fill="none" stroke="#737373" stroke-width="4" stroke-linecap="round" />
+
+        <!-- Rear bearing connection -->
+        <circle cx="530" cy="93" r="9" fill="#c7c7c7" stroke="#171717" stroke-width="4" />
+      </g>
+
+      <!-- Bridle and rod follow the beam stroke -->
+      <g class="rod-motion">
+        <path d="M151 247 L151 279 M164 247 L164 279" stroke="#555" stroke-width="4" stroke-linecap="round" />
+        <rect x="143" y="272" width="29" height="9" rx="2" fill="#171717" />
+        <path d="M157 281 V326" stroke="#171717" stroke-width="6" stroke-linecap="round" />
+      </g>
+
+      <!-- Crank, gearbox and pitman arm -->
+      <g>
+        <path d="M466 314 L475 248 H530 L540 314 Z" fill="#252525" stroke="#111" stroke-width="3" />
+        <circle cx="502" cy="267" r="25" fill="#3f3f46" stroke="#111" stroke-width="5" />
+        <circle cx="502" cy="267" r="7" fill="#d4d4d4" />
+
+        <g class="crank-motion">
+          <path d="M502 267 L502 222" stroke="#111" stroke-width="11" stroke-linecap="round" />
+          <path d="M482 218 Q502 198 522 218 L518 247 H486 Z" fill="#4b5563" stroke="#111" stroke-width="3" />
+          <circle cx="502" cy="222" r="7" fill="#d4d4d4" stroke="#111" stroke-width="3" />
+        </g>
+
+        <g class="pitman-motion">
+          <path d="M530 93 L502 222" stroke="#252525" stroke-width="9" stroke-linecap="round" />
+          <circle cx="530" cy="93" r="7" fill="#d4d4d4" stroke="#111" stroke-width="3" />
+          <circle cx="502" cy="222" r="6" fill="#d4d4d4" stroke="#111" stroke-width="3" />
+        </g>
+      </g>
     </svg>
-    <div class="oil" aria-hidden="true"></div>
+
+    <div class="oil" id="oil" aria-hidden="true"></div>
   </main>
+
+  <script>
+    (() => {
+      const scene = document.getElementById('scene');
+      const oil = document.getElementById('oil');
+      if (!scene || !oil) return;
+
+      let completed = false;
+      const complete = () => {
+        if (completed) return;
+        completed = true;
+        scene.dataset.complete = 'true';
+        window.dispatchEvent(new CustomEvent('oil-loading-complete'));
+      };
+
+      oil.addEventListener('animationend', complete, { once: true });
+
+      // Reliable fallback in case animationend is interrupted by a browser transition.
+      window.setTimeout(complete, 8500);
+
+      window.startOilAnimation = () => {
+        scene.classList.remove('finished');
+        scene.dataset.complete = 'false';
+      };
+    })();
+  </script>
 </body>
 </html>
